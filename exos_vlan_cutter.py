@@ -25,10 +25,28 @@ class DeviceWorker(object):
         # get vlan ports
         self.show_vlans_ports(["VLAN_NAME"])
         # download .pol files from device
-        self.transfer_policies(["VLAN_NAME"], direction="get")
+        self.transfer_policies(["POLICY_NAME"], direction="get")
+        # Change destination-address 0.0.0.0/0 to vlan tag
+        self.policy_changer("POLICY_NAME", self.vlans_tags["VLAN_NAME"])
 
-        self.policy_changer("VLAN_NAME", self.vlans_tags["VLAN_NAME"])
+        """
+        # Exemple of nexts steps
+      
+        # unconfig policy from vlan
+        # self.policy_unconfugire(["POLICY_NAME"])
+
+        # transfer .pol files to device
+        # self.transfer_policies(["POLICY_NAME"], direction="put")
+
+        # Check policy syntax on device
+        # self.policy_check("POLICY_NAME")
+
+        # Bind policy with same named vlan
+        # self.policy_configure("POLICY_NAME")
         
+        # Refresh policy slices on device
+        # self.policy_refresh("POLICY_NAME")
+        """
 
     def conn_open(self):
         if self.conn_handler is None:
