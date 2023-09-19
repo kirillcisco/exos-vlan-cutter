@@ -5,6 +5,8 @@ from netmiko import (ConnectHandler,
 import re
 import getpass, sys
 
+netmiko_exceptions = (NetmikoTimeoutException,
+                      NetmikoAuthenticationException)
 
 class DeviceWorker(object):
     def __init__(self):
@@ -53,8 +55,8 @@ class DeviceWorker(object):
             try:
                 self.conn_handler = ConnectHandler(**self.device_conn)
                 return True
-            except Exception as e:
-                print(e)
+            except Exception as error:
+                print("Connection failed: " + error)
                 return False
     
     def show_vlans_ports(self, vlans):
@@ -76,8 +78,8 @@ class DeviceWorker(object):
                 # return nested dict: {"vlan" : ["port", "port"]}
                 self.vlans_ports[vlan] = port_list
             return True
-        except (NetmikoTimeoutException, NetmikoAuthenticationException) as error:
-            print(error)
+        except netmiko_exceptions as error:
+            print("CMD failed: " + error)
             return False
 
     def show_vlans_tags(self, vlans):
@@ -98,8 +100,8 @@ class DeviceWorker(object):
                 # {'NameVlan': 'Tag'}
                 self.vlans_tags[vlan] = tag
             return True
-        except (NetmikoTimeoutException, NetmikoAuthenticationException) as error:
-            print(error)
+        except netmiko_exceptions as error:
+            print("CMD failed: " + error)
             return False
 
     def policy_unconfugire(self, policies):
@@ -108,8 +110,8 @@ class DeviceWorker(object):
                 output = self.conn_handler.send_command("unconfigure access-list" + policy)
                 print(output)
                 return True
-        except (NetmikoTimeoutException, NetmikoAuthenticationException) as error:
-            print(error)
+        except netmiko_exceptions as error:
+            print("Unconfigure failed: " + error)
 
     def transfer_policies(self, policies, direction):
         for policy in policies:
@@ -118,8 +120,8 @@ class DeviceWorker(object):
             try:
                 self.file_transfer = file_transfer(self.conn_handler, file, file, direction = direction)
                 print(self.file_transfer)
-            except Exception as e:
-                print(e)
+            except netmiko_exceptions as error:
+                print("Transfer failed: " + error)
 
     # change in .pol file destination-address 0.0.0.0/0, or string what you want to vlan-id
     def policy_changer(self, file, vlan_id):
@@ -149,8 +151,8 @@ class DeviceWorker(object):
                 return True
             else:
                 return False
-        except (NetmikoTimeoutException, NetmikoAuthenticationException) as error:
-            print(error)
+        except netmiko_exceptions as error:
+            print("Check failed: " + error)
             return False
 
     def policy_refresh(self, policy):
@@ -162,8 +164,8 @@ class DeviceWorker(object):
                 return True
             else:
                 return False
-        except (NetmikoTimeoutException, NetmikoAuthenticationException) as error:
-            print(error)
+        except netmiko_exceptions as error:
+            print("Refresh failed: " + error)
             return False
     
     # TEST
@@ -176,8 +178,8 @@ class DeviceWorker(object):
                 output = self.conn_handler.send_command("configure access-list "+ policy +" ports "+ port +" ingress")
                 print(output)
             return True
-        except (NetmikoTimeoutException, NetmikoAuthenticationException) as error:
-            print(error)
+        except netmiko_exceptions as error:
+            print("Configure failed: " + error)
             return False
 
 worker = DeviceWorker()
