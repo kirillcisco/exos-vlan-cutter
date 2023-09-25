@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+import argparse
+from datetime import datetime
 from netmiko import (ConnectHandler, 
                      file_transfer,
                      NetmikoTimeoutException,
@@ -5,31 +8,35 @@ from netmiko import (ConnectHandler,
 import re
 import getpass, sys
 
+__version__ = "0.1.0"
+
 netmiko_exceptions = (NetmikoTimeoutException,
                       NetmikoAuthenticationException)
 
-class DeviceWorker(object):
+class DeviceWorker():
     def __init__(self):
-        self.conn_handler: ConnectHandler = None
-        self.vlans_ports: dict = {}
-        self.vlans_tags: dict = {}
+        #self.start_time = datetime.now()
 
-        self.device_conn: dict = {
-            'device_type': 'extreme_exos',
-            "host": "HOST",
-            "username": "USERNAME",
-            "password": "PASSWORD"
-            }
+        #self.conn_handler: ConnectHandler = None
+        #self.vlans_ports: dict = {}
+        #self.vlans_tags: dict = {}
+
+        #self.device_conn: dict = {
+        #    'device_type': 'extreme_exos',
+        #    "host": "HOST",
+        #    "username": "USERNAME",
+        #    "password": "PASSWORD"
+        #    }
         
-        self.conn_open()
-        # get vlan tag
-        self.show_vlans_tags(["VLAN_NAME"])
-        # get vlan ports
-        self.show_vlans_ports(["VLAN_NAME"])
-        # download .pol files from device
-        self.transfer_policies(["POLICY_NAME"], direction="get")
-        # Change destination-address 0.0.0.0/0 to vlan tag
-        self.policy_changer("POLICY_NAME", self.vlans_tags["VLAN_NAME"])
+        #self.conn_open()
+        ## get vlan tag
+        #self.show_vlans_tags(["VLAN_NAME"])
+        ## get vlan ports
+        #self.show_vlans_ports(["VLAN_NAME"])
+        ## download .pol files from device
+        #self.transfer_policies(["POLICY_NAME"], direction="get")
+        ## Change destination-address 0.0.0.0/0 to vlan tag
+        #self.policy_changer("POLICY_NAME", self.vlans_tags["VLAN_NAME"])
 
         """
         # Exemple of nexts steps
@@ -49,6 +56,50 @@ class DeviceWorker(object):
         # Refresh policy slices on device
         # self.policy_refresh("POLICY_NAME")
         """
+    
+    def args_parser(self, args):
+        prog = "Exos Spy"
+        description = "Script to get information from exos device"
+        parser = argparse.ArgumentParser(prog = prog, description=description)
+
+        parser.add_argument(
+            "-devices",
+            nargs="?",
+            help="Device / group of devices to use",
+            action="store",
+            type=str,
+        )
+        parser.add_argument(
+            "-cmd",
+            help="Remote command to execute",
+            action="store",
+            default=None,
+            type=str,
+        )
+        parser.add_argument(
+            "-runtime", 
+            help="Display script runtime", 
+            action="store_true",
+        )
+
+        parser.add_argument("--set_username", help="Setup you username at .env", action="store", type=str)
+        parser.add_argument("--set_password", help="Setup you password at .env", action="store", type=str)
+        parser.add_argument("--set_secret", help="Setup you SSH secret at .env", action="store", type=str)
+
+        parser.add_argument("--inventory", help="List devices from inventory", action="store_true")
+        parser.add_argument("--version", help="Display version", action="store_true")
+
+        cli_args = parser.parse_args(args)
+        if not cli_args.inventory and not cli_args.version:
+            if not cli_args.devices:
+                parser.error("Enter the devices")
+        return cli_args
+
+
+    def main(self, args):
+        cli_args = self.args_parser(args)
+        print(cli_args)
+        pass
 
     def conn_open(self):
         if self.conn_handler is None:
@@ -182,7 +233,11 @@ class DeviceWorker(object):
             print("Configure failed: " + error)
             return False
 
-worker = DeviceWorker()
+if __name__ == "__main__":
+    worker = DeviceWorker()
+    sys.exit(worker.main((sys.argv[1:])))
+
+
 
 
 
